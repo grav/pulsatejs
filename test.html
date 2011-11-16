@@ -1,0 +1,105 @@
+<html>
+  <script type="text/javascript">
+    function clear() {
+      ctx.clearRect(0, 0, canvas.height, canvas.width);
+    }
+
+    function circle(x,y,r) {
+      if (r<=0) return;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI*2, true);
+      ctx.stroke();
+    }
+
+    function draw(){
+      clear();
+      for(var i=0; i<circles.length; i++){
+        var c = circles[i];
+        circle(c.x,c.y,c.radius);
+      }
+    }
+
+    function detect(){
+      for(var i=0; i<circles.length; i++){
+        var c = circles[i];
+        c.didReverse = false;
+      }
+
+      for(var i=0; i<circles.length; i++){
+        var c = circles[i];
+        if(!c.didReverse){
+          for(var j=0; j<circles.length; j++){
+            var d = circles[j];
+            if(d.didReverse) continue;
+            if(c.collidesWith(d)){
+              c.reverse(); d.reverse();
+            }
+          }
+
+          if(c.radius<=0 && c.inc < 0){
+            c.reverse();
+          }
+
+          c.radius += c.inc;
+
+        }
+      }
+    }
+
+    var Circle = function(x,y,inc){
+      this.x = x;
+      this.y = y;
+      this.radius = 0;
+      this.inc = inc;
+      this.reverse = function(){
+        this.didReverse = true;
+        this.inc *= -1
+      };
+      this.didReverse = false;
+      this.distTo = function(other){
+        var x = Math.abs(this.x - other.x);
+        var y = Math.abs(this.y - other.y);
+        return Math.sqrt(x*x + y*y);
+      };
+
+      this.collidesWith = function(other){
+        if(this.inc<0 || other.inc < 0) return false;
+        return this.radius + other.radius > this.distTo(other);
+      }
+    }
+
+    // global vars
+    var ctx;
+    var canvas;
+
+    var circles = [];
+    var maxRadius = 30
+
+    window.onload = function(){
+      canvas = document.getElementById('myCanvas');
+      ctx = canvas.getContext('2d');
+      setInterval(draw, 1000/25);
+      setInterval(detect, 5);
+      setTimeout(function(){
+        circles.push(new Circle(100,100,0.06));
+      },700);
+      setTimeout(function(){
+        circles.push(new Circle(150,200,0.02));
+      },3300);
+      setTimeout(function(){
+        circles.push(new Circle(10,230,0.2));
+      },10);
+      setTimeout(function(){
+        circles.push(new Circle(298,45,0.1));
+      },900);
+    }
+
+
+
+  </script>
+  <body>
+    <canvas id='myCanvas' width='500' height='500'>
+
+    </canvas>
+  </body>
+</html>
