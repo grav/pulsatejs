@@ -1,5 +1,28 @@
+<!DOCTYPE html>
 <html>
   <script type="text/javascript">
+    // The general-purpose event handler. This function just determines the mouse
+    // position relative to the canvas element.
+    function mouseup(ev){
+      var c = new Circle(ev._x, ev._y, 0.05);
+      for(var i = 0;i<circles.length; i++){
+        var d = circles[i];
+        if(d.distTo(c)<=d.radius) return;
+      }
+      circles.push(c);
+    }
+
+    function ev_canvas (ev) {
+      if (ev.layerX || ev.layerX == 0) { // Firefox
+        ev._x = ev.layerX;
+        ev._y = ev.layerY;
+      } else if (ev.offsetX || ev.offsetX == 0) { // Opera
+        ev._x = ev.offsetX;
+        ev._y = ev.offsetY;
+      }
+      mouseup(ev);
+    }
+
     function clear() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
@@ -57,7 +80,7 @@
       this.collidesWith = function(other){
         return this.radius + other.radius > this.distTo(other);
       }
-    }
+    };
 
     // global vars
     var ctx;
@@ -70,25 +93,16 @@
       ctx = canvas.getContext('2d');
       setInterval(draw, 1000/100);
       setInterval(detect, 1);
-      setTimeout(function(){
-        circles.push(new Circle(100,100,0.06));
-      },700);
-      setTimeout(function(){
-        circles.push(new Circle(150,200,0.02));
-      },3300);
-      setTimeout(function(){
-        circles.push(new Circle(10,230,0.2));
-      },10);
-      setTimeout(function(){
-        circles.push(new Circle(298,45,0.1));
-      },900);
+
+      canvas.addEventListener('mouseup', ev_canvas, false);
+
     }
 
 
 
   </script>
   <body>
-    <canvas id='myCanvas' width='100' height='500'>
+    <canvas id='myCanvas' width='500' height='500'>
 
     </canvas>
   </body>
