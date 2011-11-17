@@ -50,20 +50,26 @@
           if(i>=j) continue;
           var d = circles[j];
           if(c.collidesWith(d)){
-            c.reverse(); d.reverse();
+            c.didCollide=true;
+            d.didCollide=true;
           }
         }
+      }
 
-        if(c.radius<0){
+      for(var i=0; i<circles.length; i++){
+        var c = circles[i];
+        if(c.didCollide || c.radius<0){
           c.reverse();
         }
-
+        c.didCollide = false;
         c.radius += c.inc;
-
       }
+
+
     }
 
     var Circle = function(x,y,inc){
+      this.didCollide = false;
       this.x = x;
       this.y = y;
       this.radius = 0;
