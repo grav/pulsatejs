@@ -1,7 +1,7 @@
 <html>
   <script type="text/javascript">
     function clear() {
-      ctx.clearRect(0, 0, canvas.height, canvas.width);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
     function circle(x,y,r) {
@@ -64,7 +64,6 @@
     var canvas;
 
     var circles = [];
-    var maxRadius = 30
 
     window.onload = function(){
       canvas = document.getElementById('myCanvas');
@@ -89,7 +88,7 @@
 
   </script>
   <body>
-    <canvas id='myCanvas' width='500' height='500'>
+    <canvas id='myCanvas' width='100' height='500'>
 
     </canvas>
   </body>
