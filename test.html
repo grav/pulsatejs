@@ -1,115 +1,145 @@
 <!DOCTYPE html>
 <html>
-  <script type="text/javascript">
-    // The general-purpose event handler. This function just determines the mouse
-    // position relative to the canvas element.
-    function mouseup(ev){
-      var c = new Circle(ev._x, ev._y, 0.05);
-      for(var i = 0;i<circles.length; i++){
-        var d = circles[i];
-        if(d.distTo(c)<=d.radius) return;
-      }
-      circles.push(c);
+<script type="text/javascript">
+  // The general-purpose event handler. This function just determines the mouse
+  // position relative to the canvas element.
+  function mouseup(ev) {
+    var c = new Circle(ev._x, ev._y, 0.2);
+    circles.push(c);
+  }
+
+  function ev_canvas(ev) {
+    if (ev.layerX || ev.layerX == 0) { // Firefox
+      ev._x = ev.layerX;
+      ev._y = ev.layerY;
+    } else if (ev.offsetX || ev.offsetX == 0) { // Opera
+      ev._x = ev.offsetX;
+      ev._y = ev.offsetY;
     }
+    mouseup(ev);
+  }
 
-    function ev_canvas (ev) {
-      if (ev.layerX || ev.layerX == 0) { // Firefox
-        ev._x = ev.layerX;
-        ev._y = ev.layerY;
-      } else if (ev.offsetX || ev.offsetX == 0) { // Opera
-        ev._x = ev.offsetX;
-        ev._y = ev.offsetY;
-      }
-      mouseup(ev);
+  function clear() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function circle(x, y, r) {
+    if (r <= 0) return;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2, true);
+    ctx.stroke();
+  }
+
+  function animate() {
+      requestAnimFrame( animate );
+      draw();
+
+  }
+
+  function draw() {
+    clear();
+    for (var i = 0; i < circles.length; i++) {
+      var c = circles[i];
+      circle(c.x, c.y, c.radius);
     }
+  }
 
-    function clear() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
+  function detect() {
 
-    function circle(x,y,r) {
-      if (r<=0) return;
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI*2, true);
-      ctx.stroke();
-    }
-
-    function draw(){
-      clear();
-      for(var i=0; i<circles.length; i++){
-        var c = circles[i];
-        circle(c.x,c.y,c.radius);
-      }
-    }
-
-    function detect(){
-
-      for(var i=0; i<circles.length; i++){
-        var c = circles[i];
-        for(var j=0; j<circles.length; j++){
-          if(i>=j) continue;
-          var d = circles[j];
-          if(c.collidesWith(d)){
-            c.didCollide=true;
-            d.didCollide=true;
-          }
+    for (var i = 0; i < circles.length; i++) {
+      var c = circles[i];
+      for (var j = 0; j < circles.length; j++) {
+        if (i == j) continue;
+        var d = circles[j];
+        if (c.contains(d, 0) && !c.contains(d, 1)) {
+          // d is going to overlap c
+          c.didCollide = true;
+          d.didCollide = true;
+        } else if (!c.overlaps(d, 0) && c.overlaps(d, 1)) {
+          // d is going to overlap d
+          c.didCollide = true;
+          d.didCollide = true;
         }
       }
-
-      for(var i=0; i<circles.length; i++){
-        var c = circles[i];
-        if(c.didCollide || c.radius<0){
-          c.reverse();
-        }
-        c.didCollide = false;
-        c.radius += c.inc;
-      }
-
-
     }
 
-    var Circle = function(x,y,inc){
-      this.didCollide = false;
-      this.x = x;
-      this.y = y;
-      this.radius = 0;
-      this.inc = inc;
-      this.reverse = function(){
-        this.inc *= -1
-      };
-      this.distTo = function(other){
-        var x = this.x - other.x;
-        var y = this.y - other.y;
-        return Math.sqrt(x*x + y*y);
-      };
-
-      this.collidesWith = function(other){
-        return this.radius + other.radius > this.distTo(other);
+    for (var i = 0; i < circles.length; i++) {
+      var c = circles[i];
+      if (c.didCollide || c.radius < 0) {
+        c.reverse();
       }
+      c.didCollide = false;
+      c.radius += c.inc;
+    }
+
+
+  }
+
+  var Circle = function(x, y, inc) {
+    this.didCollide = false;
+    this.x = x;
+    this.y = y;
+    this.radius = 0;
+    this.inc = inc;
+    this.reverse = function() {
+      this.inc *= -1
+    };
+    this.distTo = function(other) {
+      var x = this.x - other.x;
+      var y = this.y - other.y;
+      return Math.sqrt(x * x + y * y);
     };
 
-    // global vars
-    var ctx;
-    var canvas;
-
-    var circles = [];
-
-    window.onload = function(){
-      canvas = document.getElementById('myCanvas');
-      ctx = canvas.getContext('2d');
-      setInterval(draw, 1000/100);
-      setInterval(detect, 1);
-
-      canvas.addEventListener('mouseup', ev_canvas, false);
-
+    this.contains = function(other, ticks) {
+      var r1 = this.radius + this.inc * ticks;
+      var r2 = other.radius + other.inc * ticks;
+      var dist = this.distTo(other);
+      return dist < r1 + r2 && dist + r2 < r1;
     }
 
+    this.overlaps = function(other, ticks) {
+      var r1 = this.radius + this.inc * ticks;
+      var r2 = other.radius + other.inc * ticks;
+      var dist = this.distTo(other);
+      return dist < r1 + r2 && dist > Math.max(r1, r2);
+    }
+
+  };
+
+  // global vars
+  var ctx;
+  var canvas;
+
+  var circles = [];
+
+// requestAnim shim layer by Paul Irish
+  window.requestAnimFrame = (function(){
+    return  window.requestAnimationFrame       ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame    ||
+            window.oRequestAnimationFrame      ||
+            window.msRequestAnimationFrame     ||
+            function(/* function */ callback, /* DOMElement */ element){
+              window.setTimeout(callback, 1000 / 60);
+            };
+  })();
+
+  window.onload = function() {
+
+    canvas = document.getElementById('myCanvas');
+    ctx = canvas.getContext('2d');
+//    setInterval(draw, 1000 / 100);
+    setInterval(detect, 1);
+    animate();
+    canvas.addEventListener('mouseup', ev_canvas, false);
+
+  }
 
 
-  </script>
-  <body>
-    <canvas id='myCanvas' width='500' height='500'>
+</script>
+<body>
+<canvas id='myCanvas' width='500' height='500'>
 
-    </canvas>
-  </body>
+</canvas>
+</body>
 </html>
