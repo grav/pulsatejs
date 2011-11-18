@@ -50,7 +50,9 @@
       var c = circles[i];
       for (var j = 0; j < circles.length; j++) {
         if (i == j) continue;
+        if (c.didCollide) continue;
         var d = circles[j];
+        if (d.didCollide) continue;
         if (c.contains(d, 0) && !c.contains(d, 1)) {
           // d is going to overlap c
           c.didCollide = true;
@@ -128,9 +130,9 @@
 
     canvas = document.getElementById('myCanvas');
     ctx = canvas.getContext('2d');
+    canvas.addEventListener('mouseup', ev_canvas, false);
     setInterval(detect, 1);
     animate();
-    canvas.addEventListener('mouseup', ev_canvas, false);
 
   }
 
