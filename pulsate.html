@@ -31,8 +31,9 @@
   }
 
   function animate() {
-      requestAnimFrame( animate );
-      draw();
+    requestAnimFrame( animate );
+    detect();
+    draw();
 
   }
 
@@ -70,12 +71,45 @@
       if (c.didCollide || c.radius < 0) {
         c.reverse();
       }
+
+      if(c.didCollide){
+        playSound(snd);
+      }
+
       c.didCollide = false;
       c.radius += c.inc;
     }
 
 
   }
+
+
+  function loadError(){
+    alert('loadSound failed');
+  }
+
+  function loadSound(url) {
+    var request = new XMLHttpRequest();
+    request.open('GET', url, true);
+    request.responseType = 'arraybuffer';
+
+    // Decode asynchronously
+    request.onload = function() {
+      sndctx.decodeAudioData(request.response, function(buffer) {
+        snd = buffer;
+      }, loadError);
+    }
+    request.send();
+  }
+
+  function playSound(buffer) {
+    if(!sndctx) return;
+    var source = sndctx.createBufferSource(); // creates a sound source
+    source.buffer = buffer;                    // tell the source which sound to play
+    source.connect(sndctx.destination);       // connect the source to the context's destination (the speakers)
+    source.noteOn(0);                          // play the source now
+  }
+
 
   var Circle = function(x, y, inc) {
     this.didCollide = false;
@@ -111,11 +145,13 @@
   // global vars
   var ctx;
   var canvas;
-
   var circles = [];
 
+  var sndctx;
+  var snd;
+
 // requestAnim shim layer by Paul Irish
-  window.requestAnimFrame = (function(){
+  requestAnimFrame = (function(){
     return  window.requestAnimationFrame       ||
             window.webkitRequestAnimationFrame ||
             window.mozRequestAnimationFrame    ||
@@ -128,10 +164,20 @@
 
   window.onload = function() {
 
+    try {
+      sndctx = new webkitAudioContext();
+      // loads into snd (callback)
+      loadSound('bell.wav');
+    }
+    catch(e) {
+      alert('Web Audio API is not supported in this browser');
+    }
+
+
+
     canvas = document.getElementById('myCanvas');
     ctx = canvas.getContext('2d');
     canvas.addEventListener('mouseup', ev_canvas, false);
-    setInterval(detect, 1);
     animate();
 
   }
